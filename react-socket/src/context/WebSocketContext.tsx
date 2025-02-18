@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import client from "../components/messaging/client.ts";
 
 interface WebSocketContextType {
@@ -21,7 +21,11 @@ export const useWebSocket = () => {
     return context;
 };
 
-export const WebSocketProvider: React.FC = ({ children }) => {
+interface WebSocketProviderProps {
+    children: ReactNode; // Explicitly include the children prop
+}
+
+export const WebSocketProvider: React.FC<WebSocketProviderProps> = ({ children }) => {
     const [messages, setMessages] = useState<string[]>([]);
     const [message, setMessage] = useState("");
     const [username, setUsername] = useState<string | null>(null);
@@ -30,14 +34,14 @@ export const WebSocketProvider: React.FC = ({ children }) => {
         const newMessage = JSON.parse(payload.body);
 
         if (newMessage.type === "JOIN" || newMessage.type === "LEAVE") {
-            newMessage.content = newMessage.sender + (newMessage.type === "JOIN" ? " joined!" : " left!");
+            newMessage.content =
+                newMessage.sender + (newMessage.type === "JOIN" ? " joined!" : " left!");
             setMessages((prev) => [...prev, newMessage.content]);
         } else {
             setMessages((prev) => [...prev, newMessage.content]);
         }
     };
 
-    // Helper function to check username and reconnect
     const reconnectWebSocket = () => {
         const storedUsername = localStorage.getItem("username");
         if (storedUsername && !client.connected) {
@@ -66,7 +70,7 @@ export const WebSocketProvider: React.FC = ({ children }) => {
     };
 
     useEffect(() => {
-        reconnectWebSocket(); // Attempt to reconnect on component mount
+        reconnectWebSocket();
 
         if (username) {
             const connectWebSocket = async () => {
@@ -115,7 +119,9 @@ export const WebSocketProvider: React.FC = ({ children }) => {
     };
 
     return (
-        <WebSocketContext.Provider value={{ messages, sendMessage, setMessages, message, setMessage, username, setUsername }}>
+        <WebSocketContext.Provider
+            value={{ messages, sendMessage, setMessages, message, setMessage, username, setUsername }}
+        >
             {children}
         </WebSocketContext.Provider>
     );
